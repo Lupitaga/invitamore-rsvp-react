@@ -62,6 +62,8 @@ function normalizarNumeroWhatsapp(numero) {
 export function useRSVP({
   apiBase,
 
+  IdEvento,
+
   codigoInvitacion:
     codigoManual,
 
@@ -192,6 +194,7 @@ export function useRSVP({
             await consultarInvitacionPublica({
               apiBase,
               codigoInvitacion,
+              IdEvento,
               signal,
             });
 
@@ -271,6 +274,7 @@ export function useRSVP({
       [
         apiBase,
         codigoInvitacion,
+        IdEvento,
         resultadoCodigo.error,
       ]
     );
@@ -571,6 +575,8 @@ export function useRSVP({
 
               codigoInvitacion,
 
+              IdEvento,
+
               numeroPasesConfirmados:
                 validacion.pases,
             });
@@ -628,6 +634,7 @@ export function useRSVP({
       [
         apiBase,
         codigoInvitacion,
+        IdEvento,
         confirmacionPersonalizadaHabilitada,
         guardando,
         invitacion,
@@ -686,6 +693,8 @@ export function useRSVP({
               apiBase,
 
               codigoInvitacion,
+
+              IdEvento,
             });
 
           /**
@@ -733,6 +742,7 @@ export function useRSVP({
       [
         apiBase,
         codigoInvitacion,
+        IdEvento,
         confirmacionPersonalizadaHabilitada,
         guardando,
         invitacion,

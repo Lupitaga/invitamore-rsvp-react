@@ -85,6 +85,20 @@ function validarCodigoInvitacion(codigoInvitacion) {
   return codigo;
 }
 
+function validarIdEvento(IdEvento) {
+  if (
+    IdEvento === null ||
+    IdEvento === undefined ||
+    String(IdEvento).trim() === ""
+  ) {
+    throw new RSVPApiError(
+      "El IdEvento es obligatorio."
+    );
+  }
+
+  return String(IdEvento).trim();
+}
+
 /**
  * ============================================================
  * LEER RESPUESTA JSON
@@ -149,6 +163,7 @@ async function procesarRespuesta(response) {
 export async function consultarInvitacionPublica({
   apiBase,
   codigoInvitacion,
+  IdEvento,
   signal,
 }) {
   const base = normalizarApiBase(apiBase);
@@ -156,9 +171,13 @@ export async function consultarInvitacionPublica({
   const codigo =
     validarCodigoInvitacion(codigoInvitacion);
 
+  const idEvento =
+    validarIdEvento(IdEvento);
+
   const url =
     `${base}/invitaciones/publicas/` +
-    encodeURIComponent(codigo);
+    `${encodeURIComponent(codigo)}?IdEvento=` +
+    encodeURIComponent(idEvento);
 
   let response;
 
@@ -230,6 +249,7 @@ export async function consultarInvitacionPublica({
 export async function responderInvitacionPublica({
   apiBase,
   codigoInvitacion,
+  IdEvento,
   respuesta,
   numeroPasesConfirmados,
 }) {
@@ -237,6 +257,9 @@ export async function responderInvitacionPublica({
 
   const codigo =
     validarCodigoInvitacion(codigoInvitacion);
+
+  const idEvento =
+    validarIdEvento(IdEvento);
 
   /**
    * Solo admitimos los valores
@@ -294,6 +317,7 @@ export async function responderInvitacionPublica({
       },
 
       body: JSON.stringify({
+        IdEvento: idEvento,
         respuesta,
         numeroPasesConfirmados: pases,
       }),
@@ -334,11 +358,13 @@ export async function responderInvitacionPublica({
 export async function aceptarInvitacion({
   apiBase,
   codigoInvitacion,
+  IdEvento,
   numeroPasesConfirmados,
 }) {
   return responderInvitacionPublica({
     apiBase,
     codigoInvitacion,
+    IdEvento,
     respuesta: "ACEPTADA",
     numeroPasesConfirmados,
   });
@@ -352,10 +378,12 @@ export async function aceptarInvitacion({
 export async function rechazarInvitacion({
   apiBase,
   codigoInvitacion,
+  IdEvento,
 }) {
   return responderInvitacionPublica({
     apiBase,
     codigoInvitacion,
+    IdEvento,
     respuesta: "RECHAZADA",
     numeroPasesConfirmados: 0,
   });
