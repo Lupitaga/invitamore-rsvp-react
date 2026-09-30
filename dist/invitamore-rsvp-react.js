@@ -49,43 +49,45 @@ async function u({ apiBase: e, codigoInvitacion: t, IdEvento: n, signal: r }) {
 	if (!m?.data) throw new i("El servidor no devolvió los datos de la invitación.", p.status, m);
 	return m.data;
 }
-async function d({ apiBase: e, codigoInvitacion: t, IdEvento: n, respuesta: r, numeroPasesConfirmados: c }) {
-	let u = a(e), d = o(t), f = s(n);
+async function d({ apiBase: e, codigoInvitacion: t, IdEvento: n, respuesta: r, numeroPasesConfirmados: c, mensaje: u = "" }) {
+	let d = a(e), f = o(t), p = s(n);
 	if (r !== "ACEPTADA" && r !== "RECHAZADA") throw new i("La respuesta debe ser ACEPTADA o RECHAZADA.");
-	let p;
-	if (r === "RECHAZADA") p = 0;
+	let m;
+	if (r === "RECHAZADA") m = 0;
 	else {
-		if (p = Number(c), !Number.isInteger(p)) throw new i("El número de pases confirmados debe ser un entero.");
-		if (p < 1) throw new i("Debes confirmar al menos un pase.");
+		if (m = Number(c), !Number.isInteger(m)) throw new i("El número de pases confirmados debe ser un entero.");
+		if (m < 1) throw new i("Debes confirmar al menos un pase.");
 	}
-	let m = `${u}/invitaciones/publicas/${encodeURIComponent(d)}/confirmar`, h;
+	let h = `${d}/invitaciones/publicas/${encodeURIComponent(f)}/confirmar`, g;
 	try {
-		h = await fetch(m, {
+		g = await fetch(h, {
 			method: "POST",
 			headers: {
 				Accept: "application/json",
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({
-				IdEvento: f,
+				IdEvento: p,
 				respuesta: r,
-				numeroPasesConfirmados: p
+				numeroPasesConfirmados: m,
+				mensaje: u
 			})
 		});
 	} catch {
 		throw new i("No fue posible conectar con el servidor.");
 	}
-	let g = await l(h), _ = g?.data?.invitacion;
-	if (!_) throw new i("El servidor no devolvió la invitación actualizada.", h.status, g);
-	return _;
+	let _ = await l(g), v = _?.data?.invitacion;
+	if (!v) throw new i("El servidor no devolvió la invitación actualizada.", g.status, _);
+	return v;
 }
-async function f({ apiBase: e, codigoInvitacion: t, IdEvento: n, numeroPasesConfirmados: r }) {
+async function f({ apiBase: e, codigoInvitacion: t, IdEvento: n, numeroPasesConfirmados: r, mensaje: i = "" }) {
 	return d({
 		apiBase: e,
 		codigoInvitacion: t,
 		IdEvento: n,
 		respuesta: "ACEPTADA",
-		numeroPasesConfirmados: r
+		numeroPasesConfirmados: r,
+		mensaje: i
 	});
 }
 async function p({ apiBase: e, codigoInvitacion: t, IdEvento: n }) {
@@ -206,25 +208,26 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 			valido: !1,
 			mensaje: "El número de pases debe ser un entero."
 		};
-	}, [B]), Y = e(async (e) => {
+	}, [B]), Y = e(async (e, t = "") => {
 		if (!l) return T("No hay una invitación cargada."), null;
 		if (g) return null;
 		if (!A) return T("La confirmación personalizada no está disponible."), null;
-		let t = J(e === void 0 ? O : e);
-		if (!t.valido) return T(t.mensaje), null;
+		let n = J(e === void 0 ? O : e);
+		if (!n.valido) return T(n.mensaje), null;
 		try {
 			C(!0), T(null), D("");
 			let e = await f({
 				apiBase: i,
 				codigoInvitacion: N,
 				IdEvento: a,
-				numeroPasesConfirmados: t.pases
+				numeroPasesConfirmados: n.pases,
+				mensaje: t
 			});
 			return d((t) => ({
 				...t,
 				...e,
 				IsConfirmacionPersonalizada: A
-			})), k(Number(e?.NumeroPasesConfirmados) || t.pases), D("Tu asistencia fue confirmada correctamente."), e;
+			})), k(Number(e?.NumeroPasesConfirmados) || n.pases), D("Tu asistencia fue confirmada correctamente."), e;
 		} catch (e) {
 			return T(e?.message || "No fue posible confirmar tu asistencia."), null;
 		} finally {
