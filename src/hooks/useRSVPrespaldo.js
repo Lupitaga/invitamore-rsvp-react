@@ -502,8 +502,7 @@ export function useRSVP({
   const confirmar =
     useCallback(
       async (
-        cantidadTotal,
-        Mensaje = null
+        cantidadTotal
       ) => {
         if (
           !invitacion
@@ -570,12 +569,6 @@ export function useRSVP({
 
           setMensaje("");
 
-          const mensajeNormalizado =
-            typeof Mensaje ===
-              "string"
-              ? Mensaje.trim()
-              : null;
-
           const actualizada =
             await aceptarInvitacion({
               apiBase,
@@ -586,9 +579,6 @@ export function useRSVP({
 
               numeroPasesConfirmados:
                 validacion.pases,
-
-              Mensaje:
-                mensajeNormalizado,
             });
 
           /**

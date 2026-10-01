@@ -252,7 +252,6 @@ export async function responderInvitacionPublica({
   IdEvento,
   respuesta,
   numeroPasesConfirmados,
-  Mensaje = null,
 }) {
   const base = normalizarApiBase(apiBase);
 
@@ -321,7 +320,6 @@ export async function responderInvitacionPublica({
         IdEvento: idEvento,
         respuesta,
         numeroPasesConfirmados: pases,
-        Mensaje: Mensaje ?? null,
       }),
     });
   } catch {
@@ -362,7 +360,6 @@ export async function aceptarInvitacion({
   codigoInvitacion,
   IdEvento,
   numeroPasesConfirmados,
-  Mensaje = null,
 }) {
   return responderInvitacionPublica({
     apiBase,
@@ -370,7 +367,6 @@ export async function aceptarInvitacion({
     IdEvento,
     respuesta: "ACEPTADA",
     numeroPasesConfirmados,
-    Mensaje,
   });
 }
 
@@ -390,6 +386,5 @@ export async function rechazarInvitacion({
     IdEvento,
     respuesta: "RECHAZADA",
     numeroPasesConfirmados: 0,
-    Mensaje: null,
   });
 }
