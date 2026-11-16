@@ -39,9 +39,7 @@ export class RSVPApiError extends Error {
  */
 function normalizarApiBase(apiBase) {
   if (!apiBase || typeof apiBase !== "string") {
-    throw new RSVPApiError(
-      "No se configuró la URL base del backend."
-    );
+    throw new RSVPApiError("No se configuró la URL base del backend.");
   }
 
   return apiBase.trim().replace(/\/+$/, "");
@@ -59,26 +57,19 @@ function normalizarApiBase(apiBase) {
  * - máximo 100 caracteres
  */
 function validarCodigoInvitacion(codigoInvitacion) {
-  if (
-    !codigoInvitacion ||
-    typeof codigoInvitacion !== "string"
-  ) {
-    throw new RSVPApiError(
-      "El código de invitación es obligatorio."
-    );
+  if (!codigoInvitacion || typeof codigoInvitacion !== "string") {
+    throw new RSVPApiError("El código de invitación es obligatorio.");
   }
 
   const codigo = codigoInvitacion.trim();
 
   if (!codigo) {
-    throw new RSVPApiError(
-      "El código de invitación es obligatorio."
-    );
+    throw new RSVPApiError("El código de invitación es obligatorio.");
   }
 
   if (codigo.length > 100) {
     throw new RSVPApiError(
-      "El código de invitación no puede superar los 100 caracteres."
+      "El código de invitación no puede superar los 100 caracteres.",
     );
   }
 
@@ -91,9 +82,7 @@ function validarIdEvento(IdEvento) {
     IdEvento === undefined ||
     String(IdEvento).trim() === ""
   ) {
-    throw new RSVPApiError(
-      "El IdEvento es obligatorio."
-    );
+    throw new RSVPApiError("El IdEvento es obligatorio.");
   }
 
   return String(IdEvento).trim();
@@ -112,7 +101,7 @@ async function obtenerJson(response) {
   } catch {
     throw new RSVPApiError(
       "El servidor devolvió una respuesta inválida.",
-      response.status
+      response.status,
     );
   }
 
@@ -139,10 +128,9 @@ async function procesarRespuesta(response) {
 
   if (!response.ok || data?.status !== "ok") {
     throw new RSVPApiError(
-      data?.message ||
-        "No fue posible completar la operación.",
+      data?.message || "No fue posible completar la operación.",
       response.status,
-      data
+      data,
     );
   }
 
@@ -168,16 +156,13 @@ export async function consultarInvitacionPublica({
 }) {
   const base = normalizarApiBase(apiBase);
 
-  const codigo =
-    validarCodigoInvitacion(codigoInvitacion);
+  const codigo = validarCodigoInvitacion(codigoInvitacion);
 
-  const idEvento =
-    validarIdEvento(IdEvento);
+  const idEvento = validarIdEvento(IdEvento);
 
   const url =
-    `${base}/invitaciones/publicas/` +
-    `${encodeURIComponent(codigo)}?IdEvento=` +
-    encodeURIComponent(idEvento);
+    `${base}/invitaciones/publicas/${encodeURIComponent(codigo)}` +
+    (IdEvento == null ? "" : `?IdEvento=${encodeURIComponent(IdEvento)}`);
 
   let response;
 
@@ -200,19 +185,16 @@ export async function consultarInvitacionPublica({
       throw error;
     }
 
-    throw new RSVPApiError(
-      "No fue posible conectar con el servidor."
-    );
+    throw new RSVPApiError("No fue posible conectar con el servidor.");
   }
 
-  const resultado =
-    await procesarRespuesta(response);
+  const resultado = await procesarRespuesta(response);
 
   if (!resultado?.data) {
     throw new RSVPApiError(
       "El servidor no devolvió los datos de la invitación.",
       response.status,
-      resultado
+      resultado,
     );
   }
 
@@ -255,23 +237,16 @@ export async function responderInvitacionPublica({
 }) {
   const base = normalizarApiBase(apiBase);
 
-  const codigo =
-    validarCodigoInvitacion(codigoInvitacion);
+  const codigo = validarCodigoInvitacion(codigoInvitacion);
 
-  const idEvento =
-    validarIdEvento(IdEvento);
+  const idEvento = validarIdEvento(IdEvento);
 
   /**
    * Solo admitimos los valores
    * permitidos por el backend.
    */
-  if (
-    respuesta !== "ACEPTADA" &&
-    respuesta !== "RECHAZADA"
-  ) {
-    throw new RSVPApiError(
-      "La respuesta debe ser ACEPTADA o RECHAZADA."
-    );
+  if (respuesta !== "ACEPTADA" && respuesta !== "RECHAZADA") {
+    throw new RSVPApiError("La respuesta debe ser ACEPTADA o RECHAZADA.");
   }
 
   let pases;
@@ -290,14 +265,12 @@ export async function responderInvitacionPublica({
      */
     if (!Number.isInteger(pases)) {
       throw new RSVPApiError(
-        "El número de pases confirmados debe ser un entero."
+        "El número de pases confirmados debe ser un entero.",
       );
     }
 
     if (pases < 1) {
-      throw new RSVPApiError(
-        "Debes confirmar al menos un pase."
-      );
+      throw new RSVPApiError("Debes confirmar al menos un pase.");
     }
   }
 
@@ -323,27 +296,23 @@ export async function responderInvitacionPublica({
       }),
     });
   } catch {
-    throw new RSVPApiError(
-      "No fue posible conectar con el servidor."
-    );
+    throw new RSVPApiError("No fue posible conectar con el servidor.");
   }
 
-  const resultado =
-    await procesarRespuesta(response);
+  const resultado = await procesarRespuesta(response);
 
   /**
    * Según el contrato:
    *
    * data.invitacion
    */
-  const invitacionActualizada =
-    resultado?.data?.invitacion;
+  const invitacionActualizada = resultado?.data?.invitacion;
 
   if (!invitacionActualizada) {
     throw new RSVPApiError(
       "El servidor no devolvió la invitación actualizada.",
       response.status,
-      resultado
+      resultado,
     );
   }
 
