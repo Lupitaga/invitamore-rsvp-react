@@ -171,13 +171,11 @@ export async function consultarInvitacionPublica({
   const codigo =
     validarCodigoInvitacion(codigoInvitacion);
 
-  const idEvento =
-    validarIdEvento(IdEvento);
-
   const url =
-    `${base}/invitaciones/publicas/` +
-    `${encodeURIComponent(codigo)}?IdEvento=` +
-    encodeURIComponent(idEvento);
+    `${base}/invitaciones/publicas/${encodeURIComponent(codigo)}` +
+    (IdEvento == null
+      ? ""
+      : `?IdEvento=${encodeURIComponent(IdEvento)}`);
 
   let response;
 
@@ -260,7 +258,7 @@ export async function responderInvitacionPublica({
     validarCodigoInvitacion(codigoInvitacion);
 
   const idEvento =
-    validarIdEvento(IdEvento);
+    IdEvento == null ? null : IdEvento.trim();
 
   /**
    * Solo admitimos los valores
@@ -318,7 +316,7 @@ export async function responderInvitacionPublica({
       },
 
       body: JSON.stringify({
-        IdEvento: idEvento,
+        ...(idEvento == null ? {} : { IdEvento: idEvento }),
         respuesta,
         numeroPasesConfirmados: pases,
         Mensaje: Mensaje ?? null,

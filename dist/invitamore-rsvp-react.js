@@ -1,5 +1,5 @@
 import { useCallback as e, useEffect as t, useMemo as n, useState as r } from "react";
-//#region src/api/rsvpApi.js
+// src/api/rsvpApi.js
 var i = class extends Error {
 	constructor(e, t = null, n = null) {
 		super(e), this.name = "RSVPApiError", this.status = t, this.data = n;
@@ -16,11 +16,7 @@ function o(e) {
 	if (t.length > 100) throw new i("El código de invitación no puede superar los 100 caracteres.");
 	return t;
 }
-function s(e) {
-	if (e == null || String(e).trim() === "") throw new i("El IdEvento es obligatorio.");
-	return String(e).trim();
-}
-async function c(e) {
+async function s(e) {
 	let t;
 	try {
 		t = await e.json();
@@ -29,15 +25,15 @@ async function c(e) {
 	}
 	return t;
 }
-async function l(e) {
-	let t = await c(e);
+async function c(e) {
+	let t = await s(e);
 	if (!e.ok || t?.status !== "ok") throw new i(t?.message || "No fue posible completar la operación.", e.status, t);
 	return t;
 }
-async function u({ apiBase: e, codigoInvitacion: t, IdEvento: n, signal: r }) {
-	let c = a(e), u = o(t), d = s(n), f = `${c}/invitaciones/publicas/${encodeURIComponent(u)}?IdEvento=` + encodeURIComponent(d), p;
+async function l({ apiBase: e, codigoInvitacion: t, IdEvento: n, signal: r }) {
+	let s = a(e), l = o(t), u = `${s}/invitaciones/publicas/${encodeURIComponent(l)}` + (n == null ? "" : `?IdEvento=${encodeURIComponent(n)}`), d;
 	try {
-		p = await fetch(f, {
+		d = await fetch(u, {
 			method: "GET",
 			headers: { Accept: "application/json" },
 			signal: r
@@ -45,17 +41,17 @@ async function u({ apiBase: e, codigoInvitacion: t, IdEvento: n, signal: r }) {
 	} catch (e) {
 		throw e?.name === "AbortError" ? e : new i("No fue posible conectar con el servidor.");
 	}
-	let m = await l(p);
-	if (!m?.data) throw new i("El servidor no devolvió los datos de la invitación.", p.status, m);
-	return m.data;
+	let f = await c(d);
+	if (!f?.data) throw new i("El servidor no devolvió los datos de la invitación.", d.status, f);
+	return f.data;
 }
-async function d({ apiBase: e, codigoInvitacion: t, IdEvento: n, respuesta: r, numeroPasesConfirmados: c }) {
-	let u = a(e), d = o(t), f = s(n);
+async function u({ apiBase: e, codigoInvitacion: t, IdEvento: n, respuesta: r, numeroPasesConfirmados: s, Mensaje: l = null }) {
+	let u = a(e), d = o(t), f = n == null ? null : n.trim();
 	if (r !== "ACEPTADA" && r !== "RECHAZADA") throw new i("La respuesta debe ser ACEPTADA o RECHAZADA.");
 	let p;
 	if (r === "RECHAZADA") p = 0;
 	else {
-		if (p = Number(c), !Number.isInteger(p)) throw new i("El número de pases confirmados debe ser un entero.");
+		if (p = Number(s), !Number.isInteger(p)) throw new i("El número de pases confirmados debe ser un entero.");
 		if (p < 1) throw new i("Debes confirmar al menos un pase.");
 	}
 	let m = `${u}/invitaciones/publicas/${encodeURIComponent(d)}/confirmar`, h;
@@ -67,70 +63,71 @@ async function d({ apiBase: e, codigoInvitacion: t, IdEvento: n, respuesta: r, n
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({
-				IdEvento: f,
+				...f == null ? {} : { IdEvento: f },
 				respuesta: r,
-				numeroPasesConfirmados: p
+				numeroPasesConfirmados: p,
+				Mensaje: l ?? null
 			})
 		});
 	} catch {
 		throw new i("No fue posible conectar con el servidor.");
 	}
-	let g = await l(h), _ = g?.data?.invitacion;
+	let g = await c(h), _ = g?.data?.invitacion;
 	if (!_) throw new i("El servidor no devolvió la invitación actualizada.", h.status, g);
 	return _;
 }
-async function f({ apiBase: e, codigoInvitacion: t, IdEvento: n, numeroPasesConfirmados: r }) {
-	return d({
+async function d({ apiBase: e, codigoInvitacion: t, IdEvento: n, numeroPasesConfirmados: r, Mensaje: i = null }) {
+	return u({
 		apiBase: e,
 		codigoInvitacion: t,
 		IdEvento: n,
 		respuesta: "ACEPTADA",
-		numeroPasesConfirmados: r
+		numeroPasesConfirmados: r,
+		Mensaje: i
 	});
 }
-async function p({ apiBase: e, codigoInvitacion: t, IdEvento: n }) {
-	return d({
+async function f({ apiBase: e, codigoInvitacion: t, IdEvento: n }) {
+	return u({
 		apiBase: e,
 		codigoInvitacion: t,
 		IdEvento: n,
 		respuesta: "RECHAZADA",
-		numeroPasesConfirmados: 0
+		numeroPasesConfirmados: 0,
+		Mensaje: null
 	});
 }
-//#endregion
-//#region src/utils/invitationCode.js
-var m = class extends Error {
+// src/utils/invitationCode.js
+var p = class extends Error {
 	constructor(e) {
 		super(e), this.name = "RSVPCodigoInvitacionError";
 	}
 };
-function h(e) {
-	if (e == null) throw new m("No se encontró el código de invitación.");
-	if (typeof e != "string") throw new m("El código de invitación debe ser una cadena de texto.");
+function m(e) {
+	if (e == null) throw new p("No se encontró el código de invitación.");
+	if (typeof e != "string") throw new p("El código de invitación debe ser una cadena de texto.");
 	let t = e.trim();
-	if (!t) throw new m("No se encontró el código de invitación.");
-	if (t.length > 100) throw new m("El código de invitación no puede superar los 100 caracteres.");
+	if (!t) throw new p("No se encontró el código de invitación.");
+	if (t.length > 100) throw new p("El código de invitación no puede superar los 100 caracteres.");
 	return t;
 }
-function g({ parametro: e = "codigo", search: t } = {}) {
-	if (typeof e != "string" || !e.trim()) throw new m("El nombre del parámetro de la URL no es válido.");
+function h({ parametro: e = "codigo", search: t } = {}) {
+	if (typeof e != "string" || !e.trim()) throw new p("El nombre del parámetro de la URL no es válido.");
 	let n;
 	if (typeof t == "string") n = t;
 	else {
-		if (typeof window > "u") throw new m("No es posible obtener el código de invitación fuera del navegador sin proporcionar una URL.");
+		if (typeof window > "u") throw new p("No es posible obtener el código de invitación fuera del navegador sin proporcionar una URL.");
 		n = window.location.search;
 	}
-	return h(new URLSearchParams(n).get(e.trim()));
+	return m(new URLSearchParams(n).get(e.trim()));
 }
-function _({ codigoInvitacion: e, parametro: t = "codigo", search: n } = {}) {
-	return e == null ? g({
+function g({ codigoInvitacion: e, parametro: t = "codigo", search: n } = {}) {
+	return e == null ? h({
 		parametro: t,
 		search: n
-	}) : h(e);
+	}) : m(e);
 }
-//#endregion
-//#region src/hooks/useRSVP.js
-var v = "PENDIENTE", y = "ACEPTADA", b = "RECHAZADA", x = Object.freeze({
+// src/hooks/useRSVP.js
+var _ = "PENDIENTE", v = "ACEPTADA", y = "RECHAZADA", b = Object.freeze({
 	CARGANDO: "CARGANDO",
 	PERSONALIZADA: "PERSONALIZADA",
 	WHATSAPP: "WHATSAPP",
@@ -139,14 +136,14 @@ var v = "PENDIENTE", y = "ACEPTADA", b = "RECHAZADA", x = Object.freeze({
 	ERROR: "ERROR",
 	DESCONOCIDO: "DESCONOCIDO"
 });
-function S(e) {
+function x(e) {
 	return e == null ? "" : String(e).replace(/\D/g, "");
 }
-function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = "codigo", campoNumeroWhatsapp: c = "NumeroWhatsAppConfirmacion" } = {}) {
-	let [l, d] = r(null), [m, h] = r(!0), [g, C] = r(!1), [w, T] = r(null), [E, D] = r(""), [O, k] = r(1), [A, j] = r(!1), M = n(() => {
+function S({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = "codigo", campoNumeroWhatsapp: c = "NumeroWhatsAppConfirmacion" } = {}) {
+	let [u, p] = r(null), [m, h] = r(!0), [S, C] = r(!1), [w, T] = r(null), [E, D] = r(""), [O, k] = r(1), [A, j] = r(!1), M = n(() => {
 		try {
 			return {
-				codigo: _({
+				codigo: g({
 					codigoInvitacion: o,
 					parametro: s
 				}),
@@ -159,20 +156,20 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 			};
 		}
 	}, [o, s]), N = M.codigo, P = e(async ({ signal: e } = {}) => {
-		if (T(null), D(""), M.error || !N) return d(null), j(!1), T(M.error?.message || "No se encontró el código de invitación."), h(!1), null;
+		if (T(null), D(""), M.error || !N) return p(null), j(!1), T(M.error?.message || "No se encontró el código de invitación."), h(!1), null;
 		try {
 			h(!0);
-			let t = await u({
+			let t = await l({
 				apiBase: i,
 				codigoInvitacion: N,
 				IdEvento: a,
 				signal: e
 			});
-			d(t), j(t?.IsConfirmacionPersonalizada === !0);
+			p(t), j(t?.IsConfirmacionPersonalizada === !0);
 			let n = Number(t?.NumeroPases) || 0, r = Number(t?.NumeroPasesConfirmados) || 0;
-			return t?.ClaveEstatus === y && r > 0 ? k(r) : k(+(n > 0)), t;
+			return t?.ClaveEstatus === v && r > 0 ? k(r) : k(+(n > 0)), t;
 		} catch (e) {
-			return e?.name === "AbortError" ? null : (d(null), T(e?.message || "No fue posible cargar la invitación."), null);
+			return e?.name === "AbortError" || (p(null), T(e?.message || "No fue posible cargar la invitación.")), null;
 		} finally {
 			e?.aborted || h(!1);
 		}
@@ -188,9 +185,9 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 			e.abort();
 		};
 	}, [P]);
-	let F = l?.ClaveEstatus ?? null, I = F === v, L = F === y, R = F === b, z = A, B = Number(l?.NumeroPases) || 0, V = Number(l?.NumeroPasesConfirmados) || 0, H = Math.max(B - V, 0), U = S(l?.[c] ?? null), W = typeof l?.CodigoInvitacion == "string" ? l.CodigoInvitacion.trim() : null, G = L && l?.MostrarQrAcceso === !0 && !!W, K = x.DESCONOCIDO;
-	m ? K = x.CARGANDO : w && !l ? K = x.ERROR : I ? K = z ? x.PERSONALIZADA : x.WHATSAPP : L ? K = x.ACEPTADA : R && (K = x.RECHAZADA);
-	let q = !!l && z && (I || L || R), J = e((e) => {
+	let F = u?.ClaveEstatus ?? null, I = F === _, L = F === v, R = F === y, z = A, B = Number(u?.NumeroPases) || 0, V = Number(u?.NumeroPasesConfirmados) || 0, H = Math.max(B - V, 0), U = x(u?.[c] ?? null), W = typeof u?.CodigoInvitacion == "string" ? u.CodigoInvitacion.trim() : null, G = L && u?.MostrarQrAcceso === !0 && !!W, K = b.DESCONOCIDO;
+	m ? K = b.CARGANDO : w && !u ? K = b.ERROR : I ? K = z ? b.PERSONALIZADA : b.WHATSAPP : L ? K = b.ACEPTADA : R && (K = b.RECHAZADA);
+	let q = !!u && z && (I || L || R), J = e((e) => {
 		let t = Number(e);
 		return Number.isInteger(t) ? t < 1 ? {
 			valido: !1,
@@ -206,25 +203,26 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 			valido: !1,
 			mensaje: "El número de pases debe ser un entero."
 		};
-	}, [B]), Y = e(async (e) => {
-		if (!l) return T("No hay una invitación cargada."), null;
-		if (g) return null;
+	}, [B]), Y = e(async (e, t = null) => {
+		if (!u) return T("No hay una invitación cargada."), null;
+		if (S) return null;
 		if (!A) return T("La confirmación personalizada no está disponible."), null;
-		let t = J(e === void 0 ? O : e);
-		if (!t.valido) return T(t.mensaje), null;
+		let n = J(e === void 0 ? O : e);
+		if (!n.valido) return T(n.mensaje), null;
 		try {
 			C(!0), T(null), D("");
-			let e = await f({
+			let e = typeof t == "string" ? t.trim() : null, r = await d({
 				apiBase: i,
 				codigoInvitacion: N,
 				IdEvento: a,
-				numeroPasesConfirmados: t.pases
+				numeroPasesConfirmados: n.pases,
+				Mensaje: e
 			});
-			return d((t) => ({
-				...t,
+			return p((e) => ({
 				...e,
+				...r,
 				IsConfirmacionPersonalizada: A
-			})), k(Number(e?.NumeroPasesConfirmados) || t.pases), D("Tu asistencia fue confirmada correctamente."), e;
+			})), k(Number(r?.NumeroPasesConfirmados) || n.pases), D("Tu asistencia fue confirmada correctamente."), r;
 		} catch (e) {
 			return T(e?.message || "No fue posible confirmar tu asistencia."), null;
 		} finally {
@@ -235,27 +233,27 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 		N,
 		a,
 		A,
-		g,
-		l,
+		S,
+		u,
 		O,
 		J
 	]), X = e(async () => {
-		if (!l) return T("No hay una invitación cargada."), null;
-		if (g) return null;
+		if (!u) return T("No hay una invitación cargada."), null;
+		if (S) return null;
 		if (!A) return T("La confirmación personalizada no está disponible."), null;
 		try {
 			C(!0), T(null), D("");
-			let e = await p({
+			let e = await f({
 				apiBase: i,
 				codigoInvitacion: N,
 				IdEvento: a
 			});
-			return d((t) => ({
+			return p((t) => ({
 				...t,
 				...e,
 				IsConfirmacionPersonalizada: A,
 				NumeroPasesConfirmados: 0,
-				ClaveEstatus: e?.ClaveEstatus || b
+				ClaveEstatus: e?.ClaveEstatus || y
 			})), k(0), D("Tu respuesta fue registrada correctamente."), e;
 		} catch (e) {
 			return T(e?.message || "No fue posible registrar tu respuesta."), null;
@@ -267,15 +265,15 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 		N,
 		a,
 		A,
-		g,
-		l
+		S,
+		u
 	]), Z = e((e) => {
 		let t = J(e);
 		if (!t.valido) throw Error(t.mensaje);
-		let n = t.pases, r = l?.Nombre || "Invitado", i = l?.NombreEvento, a = [];
+		let n = t.pases, r = u?.Nombre || "Invitado", i = u?.NombreEvento, a = [];
 		return a.push(`Hola, soy ${r}.`), i ? a.push(`Confirmo mi asistencia a ${i}.`) : a.push("Confirmo mi asistencia al evento."), a.push(n === 1 ? "Asistiré 1 persona." : `Asistiremos ${n} personas.`), a.join("\n");
-	}, [l, J]), Q = e(({ cantidad: e, mensaje: t } = {}) => {
-		if (!l) throw Error("No hay una invitación cargada.");
+	}, [u, J]), Q = e(({ cantidad: e, mensaje: t } = {}) => {
+		if (!u) throw Error("No hay una invitación cargada.");
 		if (!I || z) throw Error("La confirmación por WhatsApp no está disponible.");
 		if (!U) throw Error("No se configuró el número de WhatsApp para la confirmación.");
 		let n = J(e === void 0 ? O : e);
@@ -285,7 +283,7 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 	}, [
 		Z,
 		I,
-		l,
+		u,
 		z,
 		O,
 		U,
@@ -306,11 +304,11 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 		T(null), D("");
 	}, []);
 	return {
-		invitacion: l,
+		invitacion: u,
 		codigoInvitacion: N,
 		claveEstatus: F,
 		cargando: m,
-		guardando: g,
+		guardando: S,
 		error: w,
 		mensaje: E,
 		estaPendiente: I,
@@ -337,7 +335,6 @@ function C({ apiBase: i, IdEvento: a, codigoInvitacion: o, parametroCodigo: s = 
 		refrescar: P
 	};
 }
-//#endregion
-export { i as RSVPApiError, m as RSVPCodigoInvitacionError, x as RSVP_MODOS, f as aceptarInvitacion, u as consultarInvitacionPublica, h as normalizarCodigoInvitacion, g as obtenerCodigoInvitacionDesdeURL, p as rechazarInvitacion, _ as resolverCodigoInvitacion, d as responderInvitacionPublica, C as useRSVP };
+export { i as RSVPApiError, p as RSVPCodigoInvitacionError, b as RSVP_MODOS, d as aceptarInvitacion, l as consultarInvitacionPublica, m as normalizarCodigoInvitacion, h as obtenerCodigoInvitacionDesdeURL, f as rechazarInvitacion, g as resolverCodigoInvitacion, u as responderInvitacionPublica, S as useRSVP };
 
 //# sourceMappingURL=invitamore-rsvp-react.js.map
